@@ -54,7 +54,6 @@ int solve(int n, int m, IntGrid& grid) {
     D("grid:" << endl << grid);
 
     int grid_min_value = MAX_VALUE;
-    CoordVector grid_min_coords;
 
     int grid_max_value = 0;
     CoordVector grid_max_coords;
@@ -73,21 +72,16 @@ int solve(int n, int m, IntGrid& grid) {
             }
             if (v < grid_min_value) {
                 grid_min_value = v;
-                grid_min_coords.clear();
                 D("lower min" << endl);
             }
-            // store min/max coordinates
+            // store max coordinates
             if (v == grid_max_value) {
                 grid_max_coords.push_back(make_pair(x, y));
-            }
-            if (v == grid_min_value) {
-                grid_min_coords.push_back(make_pair(x, y));
             }
         }
     }
 
     D("minvalue=" << grid_min_value << endl
-        << "coords:" << endl << grid_min_coords << endl
         << "maxvalue=" << grid_max_value << endl
         << "coords:" << endl << grid_max_coords << endl);
     
@@ -98,40 +92,45 @@ int solve(int n, int m, IntGrid& grid) {
     }
     
     // search for maximum of the every minimum distance 
-    int max_of_min_distance = -1;
+    int max_of_min_distance = 0;
 
-    // iterate over poorest houses
-    CoordVector::const_iterator poor = grid_min_coords.begin();
-    for (;poor!= grid_min_coords.end(); poor++) {
+    // iterate over non-richest houses
+    for (int y=0; y<n; y++) {
+        const IntVector& row = grid[y];
+        for (int x=0; x<m; x++) {
+            int v = row[x];
+            if (v != grid_max_value) {
+                D("x=" << x << "y=" << y << "v=" << v << endl);
 
-        // search for min distance between this poor and each rich
-        int min_distance = MAX_GRID + 1;
-        
-        // iterate over richest houses
-        CoordVector::const_iterator rich = grid_max_coords.begin();
-        for (; rich != grid_max_coords.end(); rich++) {
+                // search for min distance between this poor and each rich
+                int min_distance = MAX_GRID + 1;
 
-            // distance between 2 houses is max(delta_x, delta_y)
-            // as we can move diagonally: see below example
-            //     X
-            //    X   delta_x = 5, delta_y = 3, distance = 5
-            // XXX
-            int distance = std::max(
-                abs(poor->first - rich->first),
-                abs(poor->second - rich->second)
-            );
-            
-            D("poor=" << *poor << "rich=" << *rich << "distance=" << distance << endl);
-            if (distance < min_distance) {
-                min_distance = distance;
-                D("min_distance=" << min_distance << endl);
+                // iterate over richest houses
+                CoordVector::const_iterator rich = grid_max_coords.begin();
+                for (;rich!= grid_max_coords.end(); rich++) {
+
+                    // distance between 2 houses is max(delta_x, delta_y)
+                    // as we can move diagonally: see below example
+                    //     X
+                    //    X   delta_x = 5, delta_y = 3, distance = 5
+                    // XXX
+                    int distance = std::max(
+                        abs(rich->first - x),
+                        abs(rich->second - y)
+                    );
+
+                    D("rich=" << *rich << "distance=" << distance << endl);
+                    if (distance < min_distance) {
+                        min_distance = distance;
+                        D("min_distance=" << min_distance << endl);
+                    }
+                }
+                // update maximum distance if minimum found was lower
+                if (min_distance > max_of_min_distance) {
+                    max_of_min_distance = min_distance;
+                    D("max_of_min_distance=" << max_of_min_distance << endl);
+                }
             }
-        }
-        
-        // update maximum distance if minimum found was greater
-        if (min_distance > max_of_min_distance) {
-            max_of_min_distance = min_distance;
-            D("max_of_min_distance=" << max_of_min_distance << endl);
         }
     }
     
@@ -146,7 +145,6 @@ int main(int argc, char **argv)
     cin >> T;
     D("T=" << T << endl);
     assert(T >= MIN_AMOUNT);
-    assert(T <= MAX_TEST);
 
     IntGrid grid;
 
