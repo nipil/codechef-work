@@ -41,6 +41,59 @@ int main(int argc, char **argv)
     return 0;
 }
 
+class BoolArray {
+
+private:
+    vector<unsigned long long> data;
+    unsigned int length;
+    unsigned int data_length;
+
+public:
+    inline void reset() {
+        this->data.clear();
+        this->data.resize(this->data_length);
+    }
+
+    inline BoolArray(unsigned int len) {
+        this->length = len;
+        this->data_length = 1 + (this->length >> 6); // div 64bits
+        this->data.reserve(this->data_length);
+        reset();
+    }
+
+    void print() {
+        vector<unsigned long long>::const_iterator it = this->data.begin();
+        int i = 0;
+        for (; it!=this->data.end(); it++) {
+            cout << i++ << "=" << hex << *it << dec << "\t";
+        }
+        cout << endl;
+    }
+
+    inline void set(unsigned int n, bool value) {
+        assert(n < this->length);
+        unsigned long long idx = n >> 6; // div 64 bits
+        unsigned long long off = n % 64;
+        unsigned long long mask = 1ULL << off;
+        unsigned long long & v = this->data.at(idx);
+        if (value) {
+            v |= mask;
+        } else {
+            v &= ~mask;
+        }
+        D("n=" << n << " idx=" << idx << " off=" << off << " mask=" << hex << mask << dec << " v=" << hex << v << dec << endl);
+    }
+
+    inline bool get(unsigned int n) {
+        assert(n < this->length);
+        unsigned long long idx = n >> 6; // div 64 bits
+        unsigned long long off = n % 64;
+        unsigned long long mask = 1ULL << off;
+        unsigned long long & v = this->data.at(idx);
+        return (v & mask) != 0;
+    }
+};
+
 void solve() {
     int n, k;
     cin >> n >> k;
