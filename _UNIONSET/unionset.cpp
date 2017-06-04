@@ -45,23 +45,36 @@ class BoolArray {
 
 private:
     vector<unsigned long long> data;
+    unsigned int start;
     unsigned int length;
-    unsigned int data_length;
+    unsigned int storage_length;
 
 public:
-    inline void reset() {
+    inline void resetAll() {
         this->data.clear();
-        this->data.resize(this->data_length);
+        this->data.resize(this->storage_length);
     }
 
     inline BoolArray(unsigned int len) {
+        this->start = 0;
         this->length = len;
-        this->data_length = 1 + (this->length >> 6); // div 64bits
-        this->data.reserve(this->data_length);
-        reset();
+        this->storage_length = 1 + (this->length >> 6); // div 64bits
+        this->data.reserve(this->storage_length);
+        resetAll();
     }
 
-    void print() {
+    inline BoolArray(unsigned int start_included, unsigned int end_included) {
+        assert(start_included >= 0);
+        assert(start_included <= end_included);
+        this->start = start_included;
+        this->length = end_included - start_included + 1;
+        D(this->length);
+        this->storage_length = 1 + (this->length >> 6); // div 64bits
+        this->data.reserve(this->storage_length);
+        resetAll();
+    }
+
+    void print() const {
         vector<unsigned long long>::const_iterator it = this->data.begin();
         int i = 0;
         for (; it!=this->data.end(); it++) {
@@ -70,27 +83,111 @@ public:
         cout << endl;
     }
 
-    inline void set(unsigned int n, bool value) {
+
+    inline void set(unsigned int n) {
+        n -= this->start;
         assert(n < this->length);
         unsigned long long idx = n >> 6; // div 64 bits
         unsigned long long off = n % 64;
         unsigned long long mask = 1ULL << off;
         unsigned long long & v = this->data.at(idx);
-        if (value) {
-            v |= mask;
-        } else {
-            v &= ~mask;
-        }
+        v |= mask;
         D("n=" << n << " idx=" << idx << " off=" << off << " mask=" << hex << mask << dec << " v=" << hex << v << dec << endl);
     }
 
-    inline bool get(unsigned int n) {
+    inline void clear(unsigned int n) {
+        n -= this->start;
         assert(n < this->length);
         unsigned long long idx = n >> 6; // div 64 bits
         unsigned long long off = n % 64;
         unsigned long long mask = 1ULL << off;
         unsigned long long & v = this->data.at(idx);
+        v &= ~mask;
+        D("n=" << n << " idx=" << idx << " off=" << off << " mask=" << hex << mask << dec << " v=" << hex << v << dec << endl);
+    }
+
+    inline bool get(unsigned int n) const {
+        n -= this->start;
+        assert(n < this->length);
+        unsigned long long idx = n >> 6; // div 64 bits
+        unsigned long long off = n % 64;
+        unsigned long long mask = 1ULL << off;
+        const unsigned long long & v = this->data.at(idx);
         return (v & mask) != 0;
+    }
+
+    static void Test() {
+        BoolArray a(1,1);
+        D("a1" << "=" << a.get(1) << endl);
+        a.set(1);
+        D("a1" << "=" << a.get(1) << endl);
+        a.clear(1);
+        D("a1" << "=" << a.get(1) << endl);
+
+        D("s/e" << endl);
+        BoolArray d(70);
+        for (int i=0; i<5; i++) {
+            D("d" << i << "=" << d.get(i) << endl);
+            d.set(i);
+            D("d" << i << "=" << d.get(i) << endl);
+            d.clear(i);
+            D("d" << i << "=" << d.get(i) << endl);
+        }
+        D("s/e" << endl);
+        BoolArray b(1, 70);
+        for (int i=1; i<=70; i++) {
+            D("b" << i << "=" << b.get(i) << endl);
+            b.set(i);
+            D("b" << i << "=" << b.get(i) << endl);
+            b.clear(i);
+            D("b" << i << "=" << b.get(i) << endl);
+        }
+
+        // BoolArray::Test();
+        int l = 63;
+        BoolArray x(l), y(l);
+        for (int i=0; i<l; i++) {
+            x.set(i);
+            y.set(i);
+        }
+        D("result=" << BoolArray::UnionHasAll(a, b) << endl);
+        a.clear(0);
+        b.clear(0);
+        D("result=" << BoolArray::UnionHasAll(a, b) << endl);
+    }
+
+    static inline bool UnionHasAll(const BoolArray& a, const BoolArray& b) {
+        assert(a.length == b.length);
+        int last_full = (a.length >> 6) - 1;
+
+        // test every full
+        D("last_full=" << last_full << endl);
+        for (int i=0; i<=last_full; i++) {
+            unsigned long long ai = a.data.at(i);
+            D("A" << i << "=" << hex << ai << dec << endl);
+            unsigned long long bi = b.data.at(i);
+            D("B" << i << "=" << hex << bi << dec << endl);
+            unsigned long long r = ~(a.data.at(i) | b.data.at(i));
+            D("R" << i << "=" << hex << r << dec << endl);
+            if (r != 0) {
+                return false;
+            }
+        }
+
+        int remain = a.length % 64;
+        D("remain=" << remain << endl);
+        if (remain == 0) {
+            D("completed" << endl);
+            return true;
+        }
+
+        int last = last_full + 1;
+        D("last=" << last << endl);
+        unsigned long long mask = (1ULL << remain) - 1;
+        D("mask=" << hex << mask << dec << endl);
+        unsigned long long r = a.data.at(last) | b.data.at(last);
+        D("R=" << hex << r << dec << endl);
+        return (r == mask);
     }
 };
 
