@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     D("T=" << T << endl);
     assert(T >= 1);
     for (int i=0; i<T; i++) {
-        D("test: " << i + 1 << "/" << T << endl);
+        D("==== " << i + 1 << "/" << T << endl);
         solve();
     }
     return 0;
@@ -56,6 +56,7 @@ public:
     }
 
     inline BoolArray(unsigned int len) {
+        D("length_constructor " << this->length << endl);
         this->start = 0;
         this->length = len;
         this->storage_length = 1 + (this->length >> 6); // div 64bits
@@ -64,11 +65,11 @@ public:
     }
 
     inline BoolArray(unsigned int start_included, unsigned int end_included) {
+        D("range_constructor " << start_included << " " << end_included << endl);
         assert(start_included >= 0);
         assert(start_included <= end_included);
         this->start = start_included;
         this->length = end_included - start_included + 1;
-        D(this->length);
         this->storage_length = 1 + (this->length >> 6); // div 64bits
         this->data.reserve(this->storage_length);
         resetAll();
@@ -82,7 +83,6 @@ public:
         }
         cout << endl;
     }
-
 
     inline void set(unsigned int n) {
         n -= this->start;
@@ -199,4 +199,60 @@ void solve() {
     assert(n <= MAX_SET_LENGTH);
     assert(k >= 1);
     assert(k <= MAX_SET_LENGTH);
+
+    // data for all sets
+    vector<BoolArray> data;
+    for (int i=0; i<n; i++) {
+        // flag storage for current set
+        BoolArray current(1, k);
+
+        // read set length
+        int l;
+        cin >> l;
+        D("L" << i << "=" << l << endl);
+
+        // iterate over input
+        for (int j=0; j<l; j++) {
+            int v;
+            cin >> v;
+            D("V" << j << "=" << v << endl);
+            // set flag when present
+            current.set(v);
+        }
+
+        // add this set to all sets
+        data.push_back(current);
+    }
+
+    // single-set edge case
+    if (n == 1) {
+/*
+        // test set with itself
+        BoolArray& d = data.front();
+        bool result = BoolArray::UnionHasAll(d, d);
+        if (result) {
+            cout << 1 << endl;
+        } else {
+            cout << 0 << endl;
+        }
+*/
+        // do not test set with itself
+        cout << 0 << endl;
+
+        // end testing for this test case
+        return;
+    }
+
+    // cross-set results
+    int valid = 0;
+    vector<BoolArray>::const_iterator it_a, it_b;
+    it_a = data.begin();
+    for (; it_a != data.end(); it_a++) {
+        it_b = it_a + 1;
+        for (; it_b != data.end(); it_b++) {
+            bool result = BoolArray::UnionHasAll(*it_a, *it_b);
+            valid += result ? 1 : 0;
+        }
+    }
+    cout << valid << endl;
 }
