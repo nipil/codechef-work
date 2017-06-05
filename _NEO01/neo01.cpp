@@ -80,7 +80,7 @@ inline void solve() {
     D("s=" << s << "\tA=" << A << endl);
 
     // first max is "eat one by one"
-    long long m = s;
+    long long m = -10000000000000;
 
     // search max by splitting single eaten and grouped eaten
     long long p = 0;
@@ -99,6 +99,8 @@ inline void solve() {
         if (total > m) {
             m = total;
             D("new_max=" << m << endl);
+        } else {
+            break;
         }
     }
 
