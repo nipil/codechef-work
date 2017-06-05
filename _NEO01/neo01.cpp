@@ -11,7 +11,6 @@
 #endif
 
 #include <cassert>
-#include <cmath>
 
 using namespace std;
 
@@ -25,22 +24,9 @@ ostream &operator << (ostream &a, const vector<T> &b)
     return a;
 }
 
-
-
 typedef vector<long long> IntArray;
 
 void solve();
-
-inline void read_ll(long long len, IntArray& data) {
-    for (long long i=0; i<len; i++) {
-        long long v;
-        cin >> v;
-        assert(v >= -100000000);
-        assert(v <=  100000000);
-        data[i] = v;
-    }
-    assert(len == data.size());
-}
 
 int main(int argc, char **argv)
 {
@@ -68,38 +54,53 @@ inline void solve() {
     assert(N >= 1);
     assert(N <= 100000);
 
-    IntArray A(N);
-    read_ll(N, A);
-    std::sort(A.begin(), A.end());
-    D("A=" << A << endl);
+    if (N == 1) {
+        long long v;
+        cin >> v;
+        D("single-dish " << v << endl);
+        cout << v << endl;
+        return;
+    }
 
-    long long t = 0;
-
+    // load and sum
     long long s = 0;
-    long long h = 0;
+    vector<long long> A(N);
+    IntArray::iterator it = A.begin();
+    while (N--) {
+        long long v;
+        cin >> v;
+        assert(v >= -100000000);
+        assert(v <=  100000000);
+        *it++ = v;
+        s += v;
+    }
 
-    long long v;
-    while (A.size()) {
-        v = A.back();
-        D("v=" << v << endl);
-        A.pop_back();
-        if (v >= 0) {
-            h += v;
-            s++;
-            D("STORE: happiness=" << h << " size=" << s << endl);
-        } else {
-            if (s > 0) {
-                t += (h * s);
-                D("DUMP: happiness=" << h << " size=" << s << " sub_total=" << t << endl);
-            }
-            h = v;
-            s = 1;
+    // sort increasing
+    std::sort(A.begin(), A.end());
+    D("s=" << s << "\tA=" << A << endl);
+
+    // first max is "eat one by one"
+    long long m = s;
+
+    // search max by splitting single eaten and grouped eaten
+    long long p = 0;
+    long long b = 0;
+
+    IntArray::const_reverse_iterator rit;
+    for (rit=A.rbegin(); rit != A.rend(); rit++) {
+        const long long &v = *rit;
+        s -= v;
+        p += v;
+        b++;
+
+        long long total = p * b + s;
+        D("cur=" << *rit << "\ts=" << s << "\tp=" << p << "\tb=" << b << "\tt=" << total << endl);
+
+        if (total > m) {
+            m = total;
+            D("new_max=" << m << endl);
         }
     }
-    if (s > 0) {
-        t += (h * s);
-        D("DUMP: happiness=" << h << " size=" << s << " sub_total=" << t << endl);
-    }
 
-    cout << t << endl;
+    cout << m << endl;
 }
