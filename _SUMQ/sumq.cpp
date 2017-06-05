@@ -82,7 +82,7 @@ inline void solve() {
     std::sort(Q.begin(), Q.end());
     D("Q=" << Q << endl);
     read_ull(r, R);
-    std::sort(Q.begin(), Q.end());
+    std::sort(R.begin(), R.end());
     D("R=" << R << endl);
 
     IntArray::const_iterator it_x, it_y, it_z;
