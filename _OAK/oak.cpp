@@ -91,7 +91,7 @@ public:
 
 ostream &operator << (ostream &a, const Event &e)
 {
-    D("Event: id=" << e.id << "\tq=" << e.q << "\tu=" << e.u << "\tx=" << e.x);
+    D("Event: id=" << e.id << "\ts=" << e.state << "\tq=" << e.q << "\tu=" << e.u << "\tx=" << e.x);
 }
 
 typedef vector<Branch> Branches;
@@ -182,7 +182,6 @@ inline void solve() {
     for (Events::const_iterator it = events.begin(); it != events.end(); it++) {
         D("event=" << *it << endl);
     }
-
 
     D("small_dataset=" << small_dataset << "\tneed_persist=" << need_persist << "\tno_bird=" << no_bird << endl);
     if (small_dataset) {
