@@ -1,3 +1,13 @@
+/*
+SUBMIT AS C++14
+
+empty WA submit:
+- subtask1 0.85s
+- subtask2 0.86s
+- subtask3 0.93s
+- subtask4 0.89s
+*/
+
 #include <iostream>
 #include <vector>
 #include <queue>
